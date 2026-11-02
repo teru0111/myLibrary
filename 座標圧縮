@@ -1,0 +1,46 @@
+// 座標圧縮
+template <typename T>
+struct Compress{
+  vector<T> xs;
+  // デフォルトコンストラクタ（1つずつ add() して build() する場合用）
+  Compress() = default;
+  // コンストラクタ（配列から一気に構築する場合用、内部で自動的に build される）
+  Compress(const vector<T>& a) {xs = a; build();}
+  // 値の追加（必ず build() を呼ぶ前に行う）
+  void add(T x){xs.push_back(x);}
+  // 構築：配列のソートと重複削除を実行（get や size を呼ぶ前に必ず1回実行する）
+  void build(){
+    sort(xs.begin(), xs.end());
+    xs.erase(unique(xs.begin(), xs.end()), xs.end());
+  }
+  // 元の値 x から圧縮後の 0-index を取得 (O(log N))
+  int get(T x) const{
+    return lower_bound(xs.begin(), xs.end(), x) - xs.begin();
+  }
+  // 圧縮後の 0-index i から元の値を取得 (O(1))
+  T inv(int i) const{return xs[i];}
+  // 圧縮後の要素数（種類数）を取得（セグメント木やBITのサイズ確保に使うと便利）
+  int size() const{return xs.size();}
+};
+
+/*
+【使い方例】
+
+// パターン1：クエリ処理などで1つずつ値を追加していく場合（最もよく使う形）
+Compress<long long> comp;
+for (int i = 0; i < n; i++) {
+    comp.add(A[i]);
+    comp.add(B[i]); // 複数の配列の値を同じ基準で圧縮したい場合もまとめて add できる
+}
+comp.build(); // 値をすべて追加し終えたら、必ず build() を呼ぶ
+
+int idx = comp.get(A[0]);        // A[0] の圧縮後の 0-indexed 座標を取得
+int seg_size = comp.size();      // 重複を除いた要素の種類数（セグ木のサイズにそのまま渡せる）
+
+
+// パターン2：すでに vector 配列があり、それをもとに一気に構築する場合
+vector<long long> C = {100, 10, 10, 1000};
+Compress<long long> comp2(C);    // 宣言時に配列を渡すと build() まで自動で行われる
+
+long long original = comp2.inv(1); // 圧縮後の 1 番目の元の値を取得（ここでは 100）
+*/
